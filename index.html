@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/Swiper/5.4.5/css/swiper.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Swiper/5.4.5/js/swiper.min.js"></script>
+<!--    <script src="https://cdn.bootcdn.net/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.js"></script>-->
+    <style>
+        .swiper-container {
+            width: 800px;
+            height: 500px;
+        }
+        .swiper-slide img{
+            width: 100%;height: 100%;
+        }
+        .btn{
+            width: 120px;
+            height: 30px;
+            border-radius: 5px;
+            background: olivedrab;
+            text-align: center;
+            font-size: 14px;
+            line-height: 30px;
+            cursor: pointer;
+            color: white;
+            margin-top: 10px;
+        }
+        #canvas {
+            background: #ffffff;
+            cursor: pointer;
+            box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.5);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #drawing {
+            overflow: hidden;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: 999;
+            width: 100%;
+            height: 556px;
+            background: white;
+        }
+        #drawing img{
+            display: block;
+            margin: auto;
+            width: 100%;
+            height: 100%;
+        }
+        .cont{
+            width: 800px;
+            height: 100%;
+            margin: auto;
+        }
+        .clos{
+            display:flex;
+            align-items: center;
+        }
+        .clos i{
+            display: inline-block;
+            width: 50%;
+            height: 100%;
+        }
+        .iconn{
+            background: red;
+        }
+        .icony{
+            background: yellow;
+        }
+        .circle {
+            border: 1px solid red;
+            position: absolute;
+        }
+        #imgId{
+            display: none;
+            width: 500px;
+            height: 300px;
+        }
+    </style>
+    <script src="js/html2canvas.js"></script>
+</head>
+<body>
+<div class="swiper-container">
+    <div class="swiper-wrapper">
+        <div class="swiper-slide">
+            <img src="./imgs/timg%20(1).jpg" alt="" id="img-icon">
+        </div>
+        <div class="swiper-slide">
+            <img src="./imgs/timg%20(2).jpg" alt="">
+        </div>
+        <div class="swiper-slide">
+            <img src="./imgs/timg%20(3).jpg" alt="">
+        </div>
+    </div>
+    <!-- 如果需要分页器 -->
+    <div class="swiper-pagination"></div>
+    <!-- 如果需要导航按钮 -->
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+    <!-- 如果需要滚动条 -->
+    <div class="swiper-scrollbar"></div>
+</div>
+<div class="btn">截图</div>
+<div>
+    <p>新的图片</p>
+    <img src="" id="imgId">
+</div>
+<script>
+    var mySwiper = new Swiper ('.swiper-container', {
+        direction: 'horizontal', 
+        loop: true, // 循环模式选项
+
+        // 如果需要分页器
+        pagination: {
+            el: '.swiper-pagination',
+        },
+
+        // 如果需要前进后退按钮
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+
+        // 如果需要滚动条
+        scrollbar: {
+            el: '.swiper-scrollbar',
+        },
+    });
+    var fun = {
+        showDraw(){
+            html2canvas($('.swiper-slide-active').children()).then(function(canvas) {
+                $("body").append(`<div id="drawing"><div class="cont"></div></div>`)
+                var dataUrl = canvas.toDataURL();
+                var newImg = document.createElement("img");
+                newImg.src =  dataUrl;
+                $('.cont').append(newImg);
+                fun.active();
+            });
+        },
+        active(){
+            // 圆
+            var $circle = null;
+            // 画布
+            var $drawing = $("#drawing");
+            if (!$drawing)  return;
+            // 圆心位置
+            var centerX = 0;
+            var centerY = 0;
+
+            // 是否正在画圆
+            var isDrawing = false;
+
+            // 按下鼠标开始画圆
+            $drawing.mousedown(function(event) {
+                if( $("#drawing").find('.circle').length!=0) return;
+                $circle = $('<div class="circle"></div>');
+                centerX = event.pageX - $drawing.offset().left;
+                centerY = event.pageY - $drawing.offset().top;
+                $('.cont').append($circle);
+                isDrawing = true;
+                event.preventDefault();
+            });
+
+            // 鼠标拖动
+            $drawing.mousemove(function(event) {
+                console.log('4')
+                if(isDrawing) {
+                    var radiusX = Math.abs(event.pageX - $drawing.offset().left - centerX);
+                    var radiusY = Math.abs(event.pageY - $drawing.offset().top - centerY);
+                    var radius = Math.sqrt(radiusX * radiusX + radiusY * radiusY); // 半径，勾股定理
+
+                    // 下面四个条件判断是限制圆不能超出画布区域，如果不需要这个限制可以去掉这段代码
+                    if(centerX - radius < 0) {
+                        radius = centerX;
+                    }
+                    if(centerY - radius < 0) {
+                        radius = centerY;
+                    }
+                    if(centerX + radius > $drawing.width()) {
+                        radius = $drawing.width() - centerX;
+                    }
+                    if(centerY + radius > $drawing.height()) {
+                        radius =  $drawing.height() - centerY;
+                    }
+
+                    // 设置圆的大小和位置
+                    $circle.css("left", centerX - radius + "px");
+                    $circle.css("top", centerY - radius + "px");
+                    $circle.css("width", 2 * radius + "px");
+                    $circle.css("height", 2 * radius + "px");
+                    $circle.css("border-radius", radius + "px");
+                }
+            });
+            // 鼠标松开停止画圆
+            $drawing.mouseup(function() {
+                isDrawing = false;
+               fun.creatDiv(event);
+
+            });
+        },
+        creatDiv(event) {
+            event.stopPropagation();
+            if( $("#drawing").find(".clos").length==0) {
+                let str = `<div class="clos" style="width: 105px;height: 50px;border: 1px; position: absolute; bottom: 0; right: 0;background: #CAC8C4;opacity:100%">
+                    <i class="iconn" >取消</i>
+                    <i class="icony">确定</i>
+                    </div>`
+                $(".circle").append(str);
+            }
+        }
+    }
+    $(document).on("click",'.iconn',function (event) {
+        event.stopPropagation();
+        $("#drawing").remove();
+    })
+
+    $(document).on("click", '.icony', function (event) {
+        event.stopPropagation();
+        var $drawing = $("#drawing");
+        $drawing.unbind('mousedown').unbind("mousemove").unbind("mouseup");
+        $('.clos').remove();
+        html2canvas(document.querySelector('.cont')).then(function(canvas) {
+            var dataUrl = canvas.toDataURL();
+            $('#imgId').attr('src',dataUrl);
+            $('#imgId').show();
+            $drawing.remove();
+        });
+    });
+    $('.btn').click(function(){
+        fun.showDraw()
+    })
+</script>
+</body>
+</html>
